@@ -1,0 +1,26 @@
+{
+  "name": "abdull-ecommerce-platform",
+  "version": "1.0.0",
+  "description": "ABDULL - Modern Full-Stack MERN E-Commerce Marketplace",
+  "private": true,
+  "scripts": {
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix server",
+    "install:server": "npm install --prefix server",
+    "install:client": "npm install --prefix client",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "seed:extras": "npm run seed:extras --prefix server"
+  },
+  "keywords": [
+    "ecommerce",
+    "mern",
+    "react",
+    "express",
+    "mongodb",
+    "node",
+    "abdull"
+  ],
+  "author": "Abdull E-Commerce Team",
+  "license": "ISC"
+}
