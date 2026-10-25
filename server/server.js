@@ -10,13 +10,34 @@ const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
-// Load environment configuration
-dotenv.config();
+// Load environment configuration (server/.env locally; real environment variables on the host)
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Refuse to start online with missing or unsafe settings rather than run insecurely
+if (isProduction) {
+  const problems = [];
+  try {
+    require('./config/jwt').getJwtSecret();
+  } catch (err) {
+    problems.push(err.message);
+  }
+  if (!process.env.MONGO_URI) problems.push('MONGO_URI is not set');
+  if (problems.length) {
+    console.error(`❌ Cannot start in production:\n - ${problems.join('\n - ')}`);
+    process.exit(1);
+  }
+}
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+
+// Behind a hosting proxy (Render, Railway, ...) trust its X-Forwarded-For header so
+// rate limiting and logs see the visitor's real IP instead of the proxy's
+if (isProduction) app.set('trust proxy', 1);
 
 // Disable X-Powered-By header to prevent fingerprinting
 app.disable('x-powered-by');
@@ -37,25 +58,32 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
 ];
 
-if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
-  allowedOrigins.push(process.env.CLIENT_URL);
+// The live site's own address: CLIENT_URL if set, plus the URL Render assigns automatically
+for (const url of [process.env.CLIENT_URL, process.env.RENDER_EXTERNAL_URL]) {
+  const clean = (url || '').replace(/\/+$/, '');
+  if (clean && !allowedOrigins.includes(clean)) allowedOrigins.push(clean);
 }
 
+// CORS only guards the API. The site's own pages, scripts and styles (served below)
+// are same-origin, and requests from the site's own address are always allowed — so
+// the store keeps working on any domain it is deployed to.
 app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
-      if (!origin) return callback(null, true);
+  '/api',
+  cors((req, callback) => {
+    const origin = req.header('Origin');
+    const ownOrigin = `${req.protocol}://${req.get('host')}`;
+    const base = {
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    };
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      }
+    // No origin: mobile apps, Postman, server-to-server
+    if (!origin || origin === ownOrigin || allowedOrigins.includes(origin)) {
+      return callback(null, { ...base, origin: true });
+    }
 
-      return callback(new Error(`CORS policy violation: Origin "${origin}" is not authorized.`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    return callback(new Error(`CORS policy violation: Origin "${origin}" is not authorized.`));
   })
 );
 
@@ -107,6 +135,26 @@ app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/support', require('./routes/supportRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+
+// Serve the built React storefront (client/dist) from this same server, so the
+// whole store runs as one web service. Any non-API page falls back to index.html
+// and React Router takes it from there.
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+if (require('fs').existsSync(path.join(clientDist, 'index.html'))) {
+  app.use(
+    express.static(clientDist, {
+      index: false,
+      setHeaders: (res, filePath) => {
+        // Hashed build assets never change; index.html must always be fresh
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      },
+    })
+  );
+  app.get(/^\/(?!api(\/|$)).*/, (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 // 404 & Centralized Error Handlers
 app.use(notFound);

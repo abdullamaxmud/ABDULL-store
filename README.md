@@ -298,3 +298,21 @@ CLIENT_URL=http://localhost:5173
 ---
 
 Developed with ❤️ for **ABDULL E-Commerce Platform**.
+
+---
+
+## 🌍 Deploy for free (Render + MongoDB Atlas)
+
+The server also serves the built React site, so the whole store runs as **one free Render web service**.
+
+1. **Database — MongoDB Atlas (free M0):** create a cluster, add a database user, allow network access from `0.0.0.0/0`, and copy the connection string (`mongodb+srv://USER:PASSWORD@cluster.../abdull_ecommerce`).
+2. **Hosting — Render:** *New → Blueprint* → choose this repository. `render.yaml` sets everything up; paste your Atlas string as `MONGO_URI` when asked. `JWT_SECRET` is generated automatically.
+3. **Fill the database once** from your computer, pointing at Atlas:
+   ```bash
+   cd server
+   MONGO_URI="mongodb+srv://..." npm run seed
+   MONGO_URI="mongodb+srv://..." npm run seed:extras
+   ```
+   Set `SEED_ADMIN_PASSWORD` the same way to choose the admin password.
+
+Build command `npm run build`, start command `npm start`. In production the server refuses to start without `MONGO_URI` and a random `JWT_SECRET` of at least 32 characters. Free Render services sleep after 15 minutes without visitors; the first visit after that takes about a minute.

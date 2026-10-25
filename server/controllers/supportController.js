@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Subscriber = require('../models/Subscriber');
 const ContactMessage = require('../models/ContactMessage');
 const User = require('../models/User');
+const { getJwtSecret } = require('../config/jwt');
 
 // Code handed out to newsletter subscribers (seeded by utils/seedExtras.js)
 const NEWSLETTER_COUPON = 'ABDULL15';
@@ -14,7 +15,7 @@ const optionalUser = async (req) => {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) return null;
   try {
-    const secret = process.env.JWT_SECRET || 'abdull_ecommerce_dev_fallback_secret_key_2026_do_not_use_in_prod';
+    const secret = getJwtSecret();
     const decoded = jwt.verify(header.split(' ')[1], secret, { algorithms: ['HS256'] });
     return decoded && decoded.id ? await User.findById(decoded.id).select('_id') : null;
   } catch {
