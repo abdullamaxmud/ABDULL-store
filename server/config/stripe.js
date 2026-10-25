@@ -32,6 +32,8 @@ const getStripe = () => {
 
 const isStripeTestMode = () => (process.env.STRIPE_SECRET_KEY || '').trim().startsWith('sk_test_') || (process.env.STRIPE_SECRET_KEY || '').trim().startsWith('rk_test_');
 
-const getClientUrl = () => (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+// Where Stripe sends shoppers back to: CLIENT_URL, else the address Render assigns, else local dev
+const getClientUrl = () =>
+  (process.env.CLIENT_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:5173').replace(/\/+$/, '');
 
 module.exports = { getStripe, isStripeTestMode, getClientUrl };

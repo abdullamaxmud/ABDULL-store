@@ -10,7 +10,9 @@
     "install:server": "npm install --prefix server",
     "install:client": "npm install --prefix client",
     "install:all": "npm install --prefix server && npm install --prefix client",
-    "seed:extras": "npm run seed:extras --prefix server"
+    "seed:extras": "npm run seed:extras --prefix server",
+    "build": "npm install --prefix server --omit=dev && npm install --prefix client --include=dev && npm run build --prefix client",
+    "start": "node server/server.js"
   },
   "keywords": [
     "ecommerce",
@@ -22,5 +24,8 @@
     "abdull"
   ],
   "author": "Abdull E-Commerce Team",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  }
 }

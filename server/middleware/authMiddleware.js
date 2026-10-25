@@ -1,9 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const getJwtSecret = () => {
-  return process.env.JWT_SECRET || 'abdull_ecommerce_dev_fallback_secret_key_2026_do_not_use_in_prod';
-};
+const { getJwtSecret } = require('../config/jwt');
 
 /**
  * Middleware: Verify JWT Bearer token or cookie and populate req.user
