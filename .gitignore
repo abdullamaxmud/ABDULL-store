@@ -1,0 +1,23 @@
+# Dependencies (reinstall with: npm run install:all)
+node_modules/
+
+# Secrets — copy server/.env.example to server/.env and fill it in locally
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Logs & OS / editor clutter
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Local Claude Code session settings
+.claude/settings.local.json
