@@ -612,10 +612,10 @@ const seedDatabase = async () => {
     console.log('----------------------------------------------------');
     console.log('Admin Account:');
     console.log('  Email:    admin@abdull.com');
-    console.log('  Password: Admin123!');
+    console.log(`  Password: ${process.env.SEED_ADMIN_PASSWORD ? '(the one in SEED_ADMIN_PASSWORD)' : 'Admin123!'}`);
     console.log('Customer Account:');
     console.log('  Email:    customer@abdull.com');
-    console.log('  Password: Customer123!');
+    console.log(`  Password: ${process.env.SEED_CUSTOMER_PASSWORD ? '(the one in SEED_CUSTOMER_PASSWORD)' : 'Customer123!'}`);
     console.log(`Categories Created: ${createdCategories.length}`);
     console.log(`Products Created:   ${createdProducts.length}`);
     console.log('Database Name:      abdull_ecommerce');
